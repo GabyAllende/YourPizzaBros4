@@ -28,7 +28,8 @@ export class AppComponent implements OnInit {
       ],
       "NombreCliente":"Allende",
       "NITCliente": 6789,
-      "IdEmpleado":"ABCRl949N5aptTTTM7vt"
+      "IdEmpleado":"ABCRl949N5aptTTTM7vt",
+      "Estado": "Entregado"
     };
     
     this.postPedido(body);
