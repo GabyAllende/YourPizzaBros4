@@ -425,6 +425,8 @@ app.get("/api/getPedidos2DatesClientNIT", async (req, res) => {
   var respuesta = await getPedidos2DatesClientNIT(inicio, final, nitCliente);
   res.send(respuesta);
 });
+
+//UpdateState
 /*
   {
     "IdPedido": "NXp6KInuGOHtoJWv9cnN",
@@ -462,9 +464,38 @@ app.post("/api/updatePedidoEstado", async (req, res) => {
   res.send(respuesta);
 });
 
-
-
-//UpdateState
-
+//GetPedidosEstado Obtener los pedidos segun su estado
+async function getPedidosEstado(estado) {
+  const snapshot = await pedido.where('Estado','==',estado).get();
+  const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return list;
+} 
+app.get("/api/getPedidosEstado/:estado", async (req, res) => {
+  var estado = req.params.estado;
+  const list = await getPedidosEstado(estado);
+  res.send(list);
+});
+/*
+  {
+    "Fecha":"2020-07-12T12:06:00",
+    "NITCliente": 123456
+  }
+  */
+async function getPedidoFechaNIT(fecha, nitCliente) {
+  fecha = firebase.firestore.Timestamp.fromDate(new Date(fecha));
+  const snapshot = await pedido.where('Fecha','==',fecha).where('NITCliente','==',nitCliente).get();
+  var list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  if(list.length < 1)
+  {
+    list = null;
+  }
+  return list;
+} 
+app.get("/api/getPedidoFechaNIT", async (req, res) => {
+  var fecha = req.body.Fecha;
+  var nitCliente = req.body.NITCliente;
+  const list = await getPedidoFechaNIT(fecha, nitCliente);
+  res.send(list);
+});
 
 app.listen(4000, () => console.log("Up and Running on 40000"));
