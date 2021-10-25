@@ -340,18 +340,18 @@ app.post("/api/postPedido", async (req, res) => {
 })
 //GetPedidosBetween2Dates
 async function getPedidosBetween2Dates(start, end) {
-  console.log("start:",start);
-  console.log("end",end);
+  console.log("start:", start);
+  console.log("end", end);
 
   var respuesta = null;
 
   var inicio = firebase.firestore.Timestamp.fromDate(new Date(start));
   var final = firebase.firestore.Timestamp.fromDate(new Date(end));
-  console.log("start:",inicio);
-  console.log("end",final);
-  let query = await pedido.where('Fecha', '>=', inicio).where('Fecha','<=',final);
+  console.log("start:", inicio);
+  console.log("end", final);
+  let query = await pedido.where('Fecha', '>=', inicio).where('Fecha', '<=', final);
   let querySnapshot = await query.get();
-  
+
   if (querySnapshot.empty) {
     console.log(`No encontramos pedidos entre esas fechas ${start} - ${end}`);
 
@@ -361,9 +361,9 @@ async function getPedidosBetween2Dates(start, end) {
   }
 
 
-  console.log("ListaFechas",respuesta);
+  console.log("ListaFechas", respuesta);
   return respuesta;
-} 
+}
 /*
 {
   "Inicio":"2020-01-01T12:01:18",
@@ -374,11 +374,97 @@ async function getPedidosBetween2Dates(start, end) {
 app.get("/api/getPedidosBetween2Dates", async (req, res) => {
   var inicio = req.body.Inicio;
   var final = req.body.Final;
-  console.log("inicio:",inicio);
-  console.log("final:",final);
-  var respuesta = await getPedidosBetween2Dates(inicio,final);
+  console.log("inicio:", inicio);
+  console.log("final:", final);
+  var respuesta = await getPedidosBetween2Dates(inicio, final);
   res.send(respuesta);
 });
+/*
+{
+  "Inicio":"2020-01-01T12:01:18",
+  "Final":"2020-07-12T12:06:00",
+  "NITCliente": 123456
+}
+
+*/
+async function getPedidos2DatesClientNIT(start, end, NITCliente) {
+  console.log("start:", start);
+  console.log("end", end);
+
+  var respuesta = null;
+
+  var inicio = firebase.firestore.Timestamp.fromDate(new Date(start));
+  var final = firebase.firestore.Timestamp.fromDate(new Date(end));
+  console.log("start:", inicio);
+  console.log("end", final);
+  NITCliente = parseInt(NITCliente, 10);
+
+  let query = await pedido.where('NITCliente', '==', NITCliente).where('Fecha', '>=', inicio).where('Fecha', '<=', final);
+  let querySnapshot = await query.get();
+
+  if (querySnapshot.empty) {
+    console.log(`No encontramos pedidos entre esas fechas ${start} - ${end} del cliente NIT: ${NITCliente}`);
+
+  } else {
+    console.log(`Encontramos pedidos entre las fechas ${start} - ${end} del cliente NIT: ${NITCliente}`);
+    respuesta = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  }
+
+
+  console.log("ListaFechas", respuesta);
+  return respuesta;
+}
+
+
+app.get("/api/getPedidos2DatesClientNIT", async (req, res) => {
+  var inicio = req.body.Inicio;
+  var final = req.body.Final;
+  var nitCliente = req.body.NITCliente;
+  console.log("inicio:", inicio);
+  console.log("final:", final);
+  var respuesta = await getPedidos2DatesClientNIT(inicio, final, nitCliente);
+  res.send(respuesta);
+});
+/*
+  {
+    "IdPedido": "NXp6KInuGOHtoJWv9cnN",
+    "Estado":"Entregado"
+  }
+  */
+
+async function updatePedidoEstado(idPedido,estado) {
+  let respuesta = null;
+  await pedido.doc(idPedido).get().then(snapshot => {
+    let querySnapshot = snapshot.data()
+    console.log(querySnapshot)
+    if (typeof querySnapshot == 'undefined' || querySnapshot.empty || querySnapshot == null) {
+      console.log(`No encontramos el pedido con Id: ${idPedido}`);
+
+    } else {
+      console.log('Encontramos al pedido: ', idPedido);
+      var a = pedido.doc(idPedido).update({"Estado":estado});
+      querySnapshot.Estado = estado;
+      
+      
+      
+      
+      respuesta = querySnapshot;
+    }
+  })
+  return respuesta;
+}
+
+app.post("/api/updatePedidoEstado", async (req, res) => {
+  var idPedido = req.body.IdPedido;
+  var estado = req.body.Estado;
+
+  var respuesta = await updatePedidoEstado(idPedido,estado);
+  res.send(respuesta);
+});
+
+
+
+//UpdateState
 
 
 app.listen(4000, () => console.log("Up and Running on 40000"));
