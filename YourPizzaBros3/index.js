@@ -338,7 +338,47 @@ app.post("/api/postPedido", async (req, res) => {
 
   res.send(respuesta)
 })
+//GetPedidosBetween2Dates
+async function getPedidosBetween2Dates(start, end) {
+  console.log("start:",start);
+  console.log("end",end);
 
+  var respuesta = null;
+
+  var inicio = firebase.firestore.Timestamp.fromDate(new Date(start));
+  var final = firebase.firestore.Timestamp.fromDate(new Date(end));
+  console.log("start:",inicio);
+  console.log("end",final);
+  let query = await pedido.where('Fecha', '>=', inicio).where('Fecha','<=',final);
+  let querySnapshot = await query.get();
+  
+  if (querySnapshot.empty) {
+    console.log(`No encontramos pedidos entre esas fechas ${start} - ${end}`);
+
+  } else {
+    console.log(`Encontramos pedidos entre las fechas ${start} - ${end} `);
+    respuesta = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  }
+
+
+  console.log("ListaFechas",respuesta);
+  return respuesta;
+} 
+/*
+{
+  "Inicio":"2020-01-01T12:01:18",
+  "Final":"2020-07-12T12:06:00"
+}
+
+*/
+app.get("/api/getPedidosBetween2Dates", async (req, res) => {
+  var inicio = req.body.Inicio;
+  var final = req.body.Final;
+  console.log("inicio:",inicio);
+  console.log("final:",final);
+  var respuesta = await getPedidosBetween2Dates(inicio,final);
+  res.send(respuesta);
+});
 
 
 app.listen(4000, () => console.log("Up and Running on 40000"));
